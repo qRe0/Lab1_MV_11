@@ -139,7 +139,7 @@ void printMatrix(double **matrix, int N) {
         for (int j = 0; j < N; j++) {
             cout << setw(10) << matrix[i][j];
         }
-        cout << endl;
+        cout << endl << endl;
     }
 }
 
@@ -149,13 +149,13 @@ void printVector(double *vector, int N) {
     cout << fixed << setprecision(4);
 
     for (int i = 0; i < N; i++) {
-        cout << "|" << vector[i] << "|" << endl;
+        cout << "| " << vector[i] << " |" << endl;
     }
 }
 
 int main() {
 
-    const int N = 3;
+    const int N = 7;
 
     srand(time(nullptr));
 
