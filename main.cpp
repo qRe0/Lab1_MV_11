@@ -3,13 +3,17 @@
 #include <cstdlib>
 #include <cmath>
 #include <ctime>
+#include <chrono>
 
 using namespace std;
 
-// Метод Гаусса
-double *solveWithGauss(double **A, double *b, int N) {
+const int N = 5; // Размерность матрицы
+const float detCalc = 15540; // Определитель матрицы A 5x5, вычисленный в WolframAlpha
 
-    auto *x = new double[N];
+// Метод Гаусса
+float *solveWithGauss(float **A, float *b, int N) {
+
+    auto *x = new float[N];
 
     // Прямой ход
     for (int i = 0; i < N; i++) {
@@ -23,18 +27,18 @@ double *solveWithGauss(double **A, double *b, int N) {
 
         // Перестановка строк
         if (maxRow != i) {
-            double *temp = A[i];
+            float *temp = A[i];
             A[i] = A[maxRow];
             A[maxRow] = temp;
 
-            double tempB = b[i];
+            float tempB = b[i];
             b[i] = b[maxRow];
             b[maxRow] = tempB;
         }
 
         // Обнуление элементов ниже главного
         for (int k = i + 1; k < N; k++) {
-            double factor = A[k][i] / A[i][i];
+            float factor = A[k][i] / A[i][i];
             b[k] -= factor * b[i];
             for (int j = i; j < N; j++) {
                 A[k][j] -= factor * A[i][j];
@@ -54,9 +58,9 @@ double *solveWithGauss(double **A, double *b, int N) {
 }
 
 // Вычисление определителя
-double computeDeterminant(double **A, int N) {
+float computeDeterminant(float **A, int N) {
 
-    double determinant = 1.0;
+    float determinant = 1.0;
 
     for (int i = 0; i < N; i++) {
         determinant *= A[i][i];
@@ -66,19 +70,19 @@ double computeDeterminant(double **A, int N) {
 }
 
 // Метод Холецкого
-double *solveWithCholesky(double **A, const double *b, int N) {
+float *solveWithCholesky(float **A, const float *b, int N) {
 
     // Разложение на нижнюю L и верхнюю U матрицы
-    auto **L = new double *[N];
-    auto **U = new double *[N];
+    auto **L = new float *[N];
+    auto **U = new float *[N];
     for (int i = 0; i < N; i++) {
-        L[i] = new double[N];
-        U[i] = new double[N];
+        L[i] = new float[N];
+        U[i] = new float[N];
     }
 
     for (int i = 0; i < N; i++) {
         for (int j = 0; j <= i; j++) {
-            double s = 0;
+            float s = 0;
             for (int k = 0; k < j; k++) {
                 s += L[i][k] * U[k][j];
             }
@@ -86,7 +90,7 @@ double *solveWithCholesky(double **A, const double *b, int N) {
         }
 
         for (int j = i; j < N; j++) {
-            double s = 0;
+            float s = 0;
             for (int k = 0; k < i; k++) {
                 s += L[i][k] * U[k][j];
             }
@@ -95,11 +99,12 @@ double *solveWithCholesky(double **A, const double *b, int N) {
     }
 
     // Решение Ly = b
-    auto *y = new double[N];
+    // L - нижняя треугольная матрица
+    auto *y = new float[N];
     y[0] = b[0] / L[0][0];
 
     for (int i = 1; i < N; i++) {
-        double s = 0;
+        float s = 0;
         for (int j = 0; j < i; j++) {
             s += L[i][j] * y[j];
         }
@@ -107,11 +112,12 @@ double *solveWithCholesky(double **A, const double *b, int N) {
     }
 
     // Решение Ux = y
-    auto *x = new double[N];
+    // U - верхняя треугольная матрица
+    auto *x = new float[N];
     x[N - 1] = y[N - 1] / U[N - 1][N - 1];
 
     for (int i = N - 2; i >= 0; i--) {
-        double s = 0;
+        float s = 0;
         for (int j = i + 1; j < N; j++) {
             s += U[i][j] * x[j];
         }
@@ -131,7 +137,7 @@ double *solveWithCholesky(double **A, const double *b, int N) {
 }
 
 // Вывод матрицы
-void printMatrix(double **matrix, int N) {
+void printMatrix(float **matrix, int N) {
 
     cout << fixed << setprecision(4);
 
@@ -144,7 +150,7 @@ void printMatrix(double **matrix, int N) {
 }
 
 // Вывод вектора
-void printVector(double *vector, int N) {
+void printVector(float *vector, int N) {
 
     cout << fixed << setprecision(4);
 
@@ -153,18 +159,33 @@ void printVector(double *vector, int N) {
     }
 }
 
-int main() {
+float computeMaxNorm(float **A, float *x, float *b, int N) {
+    float maxNorm = 0.0;
 
-    const int N = 7;
+    for (int i = 0; i < N; i++) {
+        float sum = 0.0;
+        for (int j = 0; j < N; j++) {
+            sum += A[i][j] * x[j];
+        }
+        float residual = abs(sum - b[i]);
+        if (residual > maxNorm) {
+            maxNorm = residual;
+        }
+    }
+
+    return maxNorm;
+}
+
+int main() {
 
     srand(time(nullptr));
 
-    auto **A = new double *[N];
+    auto **A = new float *[N];
     for (int i = 0; i < N; i++) {
-        A[i] = new double[N];
+        A[i] = new float[N];
     }
 
-    auto *b = new double[N];
+    auto *b = new float[N];
 
     // Заполнение матрицы
     for (int i = 0; i < N; i++) {
@@ -179,7 +200,7 @@ int main() {
 
     // Заполнение вектора случайными значениями
     for (int i = 0; i < N; i++) {
-        b[i] = (double) rand() / RAND_MAX;
+        b[i] = (float) rand() / RAND_MAX;
     }
 
     cout << endl;
@@ -191,24 +212,35 @@ int main() {
     printVector(b, N);
 
     // Решение системы методом Гаусса
-    double *xGauss = solveWithGauss(A, b, N);
-
-    // Вычисление определителя
-    double determinantA = computeDeterminant(A, N);
-
+    float *xGauss = solveWithGauss(A, b, N);
     cout << endl;
     cout << "Solve with Gauss" << endl;
     printVector(xGauss, N);
 
-    cout << endl;
-    cout << "Det A: " << determinantA << endl;
-
     // Решение системы методом Холецкого
-    double *xCholesky = solveWithCholesky(A, b, N);
-
+    float *xCholesky = solveWithCholesky(A, b, N);
     cout << endl;
     cout << "Solve with Cholesky:" << endl;
     printVector(xCholesky, N);
+
+    // Вычисление максимум-нормы невязки для метода Гаусса
+    float maxNormGauss = computeMaxNorm(A, xGauss, b, N);
+    cout << endl;
+    cout << "Max Norm Residual (Gauss): " << maxNormGauss;
+
+    // Вычисление максимум-нормы невязки для метода Холецкого
+    float maxNormCholesky = computeMaxNorm(A, xCholesky, b, N);
+    cout << endl;
+    cout << "Max Norm Residual (Cholesky): " << maxNormCholesky << endl;
+
+    // Вычисление определителя
+    float determinantA = computeDeterminant(A, N);
+    cout << endl;
+    cout << "Det A: " << determinantA << endl;
+    cout << "DeFacto Det A: " << detCalc << endl;
+    cout << "Absolut Error: " << abs(determinantA - detCalc) << endl;
+    cout << "Relative Error: " << abs(determinantA - detCalc) / abs(determinantA) * 100 <<"%" << endl;
+
 
     // Освобождение памяти
     for (int i = 0; i < N; i++) {
