@@ -3,12 +3,11 @@
 #include <cstdlib>
 #include <cmath>
 #include <ctime>
-#include <chrono>
 
 using namespace std;
 
 const int N = 5; // Размерность матрицы
-const float detCalc = 15540; // Определитель матрицы A 5x5, вычисленный в WolframAlpha
+const float detCalc = 15540.; // Определитель матрицы A 5x5, вычисленный в WolframAlpha
 
 // Метод Гаусса
 float *solveWithGauss(float **A, float *b, int N) {
@@ -139,7 +138,7 @@ float *solveWithCholesky(float **A, const float *b, int N) {
 // Вывод матрицы
 void printMatrix(float **matrix, int N) {
 
-    cout << fixed << setprecision(4);
+//    cout << fixed << setprecision(4);
 
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < N; j++) {
@@ -149,10 +148,41 @@ void printMatrix(float **matrix, int N) {
     }
 }
 
+void printMatrix(float **matrix, float *b, int N, int max_rows = 10, int max_cols = 10) {
+    cout << fixed << setprecision(1);
+
+    for (int i = 0; i < min(N, max_rows); i++) {
+        for (int j = 0; j < min(N, max_cols); j++) {
+            cout << setw(5) << matrix[i][j] << " ";
+        }
+
+        if (N > max_cols) {
+            cout << " ...";
+        }
+
+        cout << " | " << b[i] << endl;
+    }
+
+    if (N > max_rows) {
+        for (int i = 0; i < max_cols; i++) {
+            cout << setw(5) << "..." << " ";
+        }
+
+        if (N > max_cols) {
+            cout << " ...";
+        }
+
+        cout << " | ..." << endl;
+    }
+
+    cout << endl;
+    cout << fixed << setprecision(8);
+}
+
 // Вывод вектора
 void printVector(float *vector, int N) {
 
-    cout << fixed << setprecision(4);
+//    cout << fixed << setprecision(4);
 
     for (int i = 0; i < N; i++) {
         cout << "| " << vector[i] << " |" << endl;
@@ -212,16 +242,20 @@ int main() {
     printVector(b, N);
 
     // Решение системы методом Гаусса
+    auto start_time = clock();
     float *xGauss = solveWithGauss(A, b, N);
     cout << endl;
     cout << "Solve with Gauss" << endl;
     printVector(xGauss, N);
+    cout << "Work time of Gauss: " << (double)(clock() - start_time) / CLOCKS_PER_SEC << endl << endl;
 
     // Решение системы методом Холецкого
+    start_time = clock();
     float *xCholesky = solveWithCholesky(A, b, N);
     cout << endl;
     cout << "Solve with Cholesky:" << endl;
     printVector(xCholesky, N);
+    cout << "Work time of Cholesky: " << (double)(clock() - start_time) / CLOCKS_PER_SEC << endl << endl;
 
     // Вычисление максимум-нормы невязки для метода Гаусса
     float maxNormGauss = computeMaxNorm(A, xGauss, b, N);
