@@ -11,12 +11,10 @@ const float detCalc = 15540.; // Определитель матрицы A 5x5, 
 
 // Метод Гаусса
 float *solveWithGauss(float **A, float *b, int N) {
-
     auto *x = new float[N];
 
     // Прямой ход
     for (int i = 0; i < N; i++) {
-
         // Выбор главного элемента
         int maxRow = i;
         for (int k = i + 1; k < N; k++) {
@@ -58,7 +56,6 @@ float *solveWithGauss(float **A, float *b, int N) {
 
 // Вычисление определителя
 float computeDeterminant(float **A, int N) {
-
     float determinant = 1.0;
 
     for (int i = 0; i < N; i++) {
@@ -70,13 +67,15 @@ float computeDeterminant(float **A, int N) {
 
 // Метод Холецкого
 float *solveWithCholesky(float **A, const float *b, int N) {
-
     // Разложение на нижнюю L и верхнюю U матрицы
     auto **L = new float *[N];
     auto **U = new float *[N];
+    auto **LU = new float *[N]; // Добавлено для хранения разложения LU
+
     for (int i = 0; i < N; i++) {
         L[i] = new float[N];
         U[i] = new float[N];
+        LU[i] = new float[N]; // Выделение памяти для LU
     }
 
     for (int i = 0; i < N; i++) {
@@ -86,6 +85,7 @@ float *solveWithCholesky(float **A, const float *b, int N) {
                 s += L[i][k] * U[k][j];
             }
             L[i][j] = A[i][j] - s;
+            LU[i][j] = L[i][j]; // Заполнение матрицы LU
         }
 
         for (int j = i; j < N; j++) {
@@ -94,6 +94,7 @@ float *solveWithCholesky(float **A, const float *b, int N) {
                 s += L[i][k] * U[k][j];
             }
             U[i][j] = (A[i][j] - s) / L[i][i];
+            LU[i][j] = U[i][j]; // Заполнение матрицы LU
         }
     }
 
@@ -127,26 +128,27 @@ float *solveWithCholesky(float **A, const float *b, int N) {
     for (int i = 0; i < N; i++) {
         delete[] L[i];
         delete[] U[i];
+        delete[] LU[i]; // Освобождение памяти для LU
     }
     delete[] L;
     delete[] U;
+    delete[] LU; // Освобождение памяти для LU
     delete[] y;
 
     return x;
 }
 
 // Вывод матрицы
-void printMatrix(float **matrix, int N) {
-
-//    cout << fixed << setprecision(4);
-
-    for (int i = 0; i < N; i++) {
-        for (int j = 0; j < N; j++) {
-            cout << setw(10) << matrix[i][j];
-        }
-        cout << endl << endl;
-    }
-}
+//void printMatrix(float **matrix, int N) {
+////    cout << fixed << setprecision(4);
+//
+//    for (int i = 0; i < N; i++) {
+//        for (int j = 0; j < N; j++) {
+//            cout << setw(10) << matrix[i][j];
+//        }
+//        cout << endl << endl;
+//    }
+//}
 
 void printMatrix(float **matrix, float *b, int N, int max_rows = 10, int max_cols = 10) {
     cout << fixed << setprecision(1);
@@ -181,7 +183,6 @@ void printMatrix(float **matrix, float *b, int N, int max_rows = 10, int max_col
 
 // Вывод вектора
 void printVector(float *vector, int N) {
-
 //    cout << fixed << setprecision(4);
 
     for (int i = 0; i < N; i++) {
@@ -206,8 +207,21 @@ float computeMaxNorm(float **A, float *x, float *b, int N) {
     return maxNorm;
 }
 
-int main() {
+//// Функция для вычисления нормы Frobenius между двумя матрицами
+//float computeFrobeniusNorm(float **A, float **LU, int N) {
+//    float norm = 0.0;
+//
+//    for (int i = 0; i < N; i++) {
+//        for (int j = 0; j < N; j++) {
+//            float diff = A[i][j] - LU[i][j];
+//            norm += diff * diff;
+//        }
+//    }
+//
+//    return sqrt(norm);
+//}
 
+int main() {
     srand(time(nullptr));
 
     auto **A = new float *[N];
@@ -235,11 +249,11 @@ int main() {
 
     cout << endl;
     cout << "Matrix:" << endl;
-    printMatrix(A, N);
-
-    cout << endl;
-    cout << "Vector b:" << endl;
-    printVector(b, N);
+    printMatrix(A, b, N);
+//
+//    cout << endl;
+//    cout << "Vector b:" << endl;
+//    printVector(b, N);
 
     // Решение системы методом Гаусса
     auto start_time = clock();
@@ -260,7 +274,7 @@ int main() {
     // Вычисление максимум-нормы невязки для метода Гаусса
     float maxNormGauss = computeMaxNorm(A, xGauss, b, N);
     cout << endl;
-    cout << "Max Norm Residual (Gauss): " << maxNormGauss;
+    cout << "Max Norm Residual (Gauss): " << maxNormGauss << endl;
 
     // Вычисление максимум-нормы невязки для метода Холецкого
     float maxNormCholesky = computeMaxNorm(A, xCholesky, b, N);
@@ -273,8 +287,7 @@ int main() {
     cout << "Det A: " << determinantA << endl;
     cout << "DeFacto Det A: " << detCalc << endl;
     cout << "Absolut Error: " << abs(determinantA - detCalc) << endl;
-    cout << "Relative Error: " << abs(determinantA - detCalc) / abs(determinantA) * 100 <<"%" << endl;
-
+    cout << "Relative Error: " << abs(determinantA - detCalc) / abs(determinantA) * 100 << "%" << endl;
 
     // Освобождение памяти
     for (int i = 0; i < N; i++) {
